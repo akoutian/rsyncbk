@@ -6,8 +6,10 @@
 declare -ra gl_required_commands=(
     'awk'
     'lsblk'
+    'mount'
     'rsync'
     'tput'
+    'umount'
 )
 
 declare -ra gl_lsblk_options=(
