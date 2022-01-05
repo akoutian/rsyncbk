@@ -165,14 +165,14 @@ _die() {
 
 _cleanup() {
     for _key in "${!gl_partition_map[@]}"; do
-        _s="${_key}"
-        _d="${gl_partition_map[$_key]}"
-        _src="${gl_src_mount_map[$_s]}"
-        _dst="${gl_dst_mount_map[$_d]}"
-        umount -R ${_src}
-        umount -R ${_dst}
-        rmdir ${_src}
-        rmdir ${_dst}
+        local _src_part="${_key}"
+        local _dst_part="${gl_partition_map[$_key]}"
+        local _src_mountpoint="${gl_src_mount_map[$_src_part]}"
+        local _dst_mountpoint="${gl_dst_mount_map[$_dst_part]}"
+        umount -R ${_src_mountpoint}
+        umount -R ${_dst_mountpoint}
+        rmdir ${_src_mountpoint}
+        rmdir ${_dst_mountpoint}
     done
 
     rmdir "$gl_tmp_src"
@@ -181,11 +181,11 @@ _cleanup() {
 
 _run_rsync() {
     for _key in "${!gl_partition_map[@]}"; do
-        _s="${_key}"
-        _d="${gl_partition_map[$_key]}"
-        _src="${gl_src_mount_map[$_s]}"
-        _dst="${gl_dst_mount_map[$_d]}"
-        rsync "${gl_rsync_options[@]}" "${_src}${gl_slash}" "${_dst}${gl_slash}"
+        local _src_part="${_key}"
+        local _dst_part="${gl_partition_map[$_key]}"
+        local _src_mountpoint="${gl_src_mount_map[$_src_part]}"
+        local _dst_mountpoint="${gl_dst_mount_map[$_dst_part]}"
+        rsync "${gl_rsync_options[@]}" "${_src_mountpoint}${gl_slash}" "${_dst_mountpoint}${gl_slash}"
     done
 }
 # end functions
