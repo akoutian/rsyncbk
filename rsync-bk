@@ -119,12 +119,12 @@ _select_disks() {
 }
 
 _set_partition_map() {
+    local _s
+    local _d
     while
         read -r -u 3 src_info
         read -r -u 4 dst_info
     do
-        local _s
-        local _d
         _s="$(echo "${src_info}" | awk '{ print $1 }')"
         _d="$(echo "${dst_info}" | awk '{ print $1 }')"
         gl_partition_map["${_s}"]="${_d}"
@@ -132,9 +132,11 @@ _set_partition_map() {
 }
 
 _print_partition_map() {
+    local _s
+    local _d
     for _key in "${!gl_partition_map[@]}"; do
-        local _s="${_key}"
-        local _d="${gl_partition_map[$_key]}"
+        _s="${_key}"
+        _d="${gl_partition_map[$_key]}"
         echo "${_s} -> ${_d}"
     done
 }
@@ -164,27 +166,34 @@ _die() {
 }
 
 _cleanup() {
+    local _src_part
+    local _dst_part
+    local _src_mountpoint
+    local _dst_mountpoint
     for _key in "${!gl_partition_map[@]}"; do
-        local _src_part="${_key}"
-        local _dst_part="${gl_partition_map[$_key]}"
-        local _src_mountpoint="${gl_src_mount_map[$_src_part]}"
-        local _dst_mountpoint="${gl_dst_mount_map[$_dst_part]}"
+        _src_part="${_key}"
+        _dst_part="${gl_partition_map[$_key]}"
+        _src_mountpoint="${gl_src_mount_map[$_src_part]}"
+        _dst_mountpoint="${gl_dst_mount_map[$_dst_part]}"
         umount -R "${_src_mountpoint}"
         umount -R "${_dst_mountpoint}"
         rmdir "${_src_mountpoint}"
         rmdir "${_dst_mountpoint}"
     done
-
     rmdir "${gl_tmp_src}"
     rmdir "${gl_tmp_dst}"
 }
 
 _run_rsync() {
+    local _src_part
+    local _dst_part
+    local _src_mountpoint
+    local _dst_mountpoint
     for _key in "${!gl_partition_map[@]}"; do
-        local _src_part="${_key}"
-        local _dst_part="${gl_partition_map[$_key]}"
-        local _src_mountpoint="${gl_src_mount_map[$_src_part]}"
-        local _dst_mountpoint="${gl_dst_mount_map[$_dst_part]}"
+        _src_part="${_key}"
+        _dst_part="${gl_partition_map[$_key]}"
+        _src_mountpoint="${gl_src_mount_map[$_src_part]}"
+        _dst_mountpoint="${gl_dst_mount_map[$_dst_part]}"
         rsync "${gl_rsync_options[@]}" "${_src_mountpoint}${gl_slash}" "${_dst_mountpoint}${gl_slash}"
     done
 }
