@@ -178,6 +178,16 @@ _cleanup() {
     rmdir "$gl_tmp_src"
     rmdir "$gl_tmp_dst"
 }
+
+_run_rsync() {
+    for _key in "${!gl_partition_map[@]}"; do
+        _s="${_key}"
+        _d="${gl_partition_map[$_key]}"
+        _src="${gl_src_mount_map[$_s]}"
+        _dst="${gl_dst_mount_map[$_d]}"
+        rsync "${gl_rsync_options[@]}" "${_src}${gl_slash}" "${_dst}${gl_slash}"
+    done
+}
 # end functions
 
 # begin logic
@@ -255,13 +265,7 @@ done
 #       if not, scream and die
 
 echo 'running rsync, good luck...'
-for _key in "${!gl_partition_map[@]}"; do
-    _s="${_key}"
-    _d="${gl_partition_map[$_key]}"
-    _src="${gl_src_mount_map[$_s]}"
-    _dst="${gl_dst_mount_map[$_d]}"
-    rsync "${gl_rsync_options[@]}" "${_src}${gl_slash}" "${_dst}${gl_slash}"
-done
+_run_rsync
 
 echo ''
 echo 'Cleaning up...'
