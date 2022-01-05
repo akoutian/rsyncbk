@@ -132,8 +132,6 @@ _set_partition_map() {
 }
 
 _print_partition_map() {
-    echo ''
-    echo 'Partition map:'
     for _key in "${!gl_partition_map[@]}"; do
         local _s="${_key}"
         local _d="${gl_partition_map[$_key]}"
@@ -221,6 +219,8 @@ echo "$gl_dst_parts_info"
 #       if not, prompt for alternative disk selection and start over
 
 _set_partition_map
+echo ''
+echo 'Partition map:'
 _print_partition_map
 
 echo ''
