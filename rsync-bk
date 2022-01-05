@@ -162,6 +162,22 @@ _scream() {
 _die() {
     exit 1
 }
+
+_cleanup() {
+    for _key in "${!gl_partition_map[@]}"; do
+        _s="${_key}"
+        _d="${gl_partition_map[$_key]}"
+        _src="${gl_src_mount_map[$_s]}"
+        _dst="${gl_dst_mount_map[$_d]}"
+        umount -R ${_src}
+        umount -R ${_dst}
+        rmdir ${_src}
+        rmdir ${_dst}
+    done
+
+    rmdir "$gl_tmp_src"
+    rmdir "$gl_tmp_dst"
+}
 # end functions
 
 # begin logic
@@ -249,19 +265,7 @@ done
 
 echo ''
 echo 'Cleaning up...'
-for _key in "${!gl_partition_map[@]}"; do
-    _s="${_key}"
-    _d="${gl_partition_map[$_key]}"
-    _src="${gl_src_mount_map[$_s]}"
-    _dst="${gl_dst_mount_map[$_d]}"
-    umount -R ${_src}
-    umount -R ${_dst}
-    rmdir ${_src}
-    rmdir ${_dst}
-done
-
-rmdir "$gl_tmp_src"
-rmdir "$gl_tmp_dst"
+_cleanup
 
 echo ''
 _green 'Done.'
