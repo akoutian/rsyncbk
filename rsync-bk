@@ -117,7 +117,10 @@ _select_disks() {
 }
 
 _set_partition_map() {
-    while read -r -u 3 src_info; read -r -u 4 dst_info; do
+    while
+        read -r -u 3 src_info
+        read -r -u 4 dst_info
+    do
         local _s
         local _d
         _s="$(echo "${src_info}" | awk '{ print $1 }')"
