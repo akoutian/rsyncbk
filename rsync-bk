@@ -1,0 +1,265 @@
+#!/usr/bin/env bash
+
+# rsync-bk - interactively clone a disk with rsync
+
+# begin constants
+declare -ra gl_required_commands=(
+    'awk'
+    'lsblk'
+    'rsync'
+    'tput'
+)
+
+declare -ra gl_lsblk_options=(
+    '--list'
+    '--noheadings'
+    '--paths'
+    '--output'
+    'NAME,SIZE,TYPE,MODEL'
+)
+
+declare -A gl_partition_map
+declare -A gl_src_mount_map
+declare -A gl_dst_mount_map
+
+declare -r gl_rsync_options=(
+    '--archive'
+    '--acls'
+    '--xattrs'
+    '--hard-links'
+    '--verbose'
+    '--one-file-system'
+    '--delete'
+    '--exclude="/dev/*"'
+    '--exclude="/proc/*"'
+    '--exclude="/sys/*"'
+    '--exclude="/tmp/*"'
+    '--exclude="/run/*"'
+    '--exclude="/mnt/*"'
+    '--exclude="/media/*"'
+    '--exclude="/lost+found"'
+    '--exclude="/swapfile"'
+)
+
+declare -r gl_slash='/'
+declare -r gl_tmp_dst='/tmp/rsync_dst'
+declare -r gl_tmp_prefix='tmp_mnt_'
+declare -r gl_tmp_src='/tmp/rsync_src'
+
+gl_lsblk="$(lsblk "${gl_lsblk_options[@]}")"
+gl_disks="$(echo "${gl_lsblk}" | awk '$3 == "disk"')"
+
+gl_bold="$(tput bold)"
+gl_green="$(tput setaf 2)"
+gl_normal="$(tput sgr0)"
+gl_red="$(tput setaf 1)"
+gl_yellow="$(tput setaf 3)"
+# end constants
+
+# begin functions
+_set_disk_selection() {
+    echo 'Select source and destination:'
+    read -rep "$(_bold 'src >') " gl_src
+    read -rep "$(_bold 'dst >') " gl_dst
+}
+
+_set_disk_confirmation() {
+    echo 'You have selected:'
+    echo "$(_bold 'src') - $(_bold "${gl_src_info}")"
+    echo "$(_bold 'dst') - $(_bold "${gl_dst_info}")"
+    read -rp 'Confirm? [y/n] ' gl_disk_confirm
+}
+
+_print_missing_commands() {
+    local _missing_count=0
+    local _msg
+    local _required="$1"
+    for _c in ${_required}; do
+        if ! hash "${_c}" >/dev/null 2>&1; then
+            _msg="$(_red 'Required command not found in PATH:')"
+            _scream "${_msg} ${_c}"
+            ((_missing_count++))
+        fi
+    done
+    if ((_missing_count > 0)); then
+        _msg="$(_red 'Missing required command(s), aborting!')"
+        _scream "${_msg}"
+        _die
+    fi
+}
+
+_set_partition_info() {
+    gl_src_parts_info="$(echo "${gl_lsblk}" | awk -v src="$1" '$1 ~ src && $3 == "part"')"
+    gl_dst_parts_info="$(echo "${gl_lsblk}" | awk -v dst="$2" '$1 ~ dst && $3 == "part"')"
+}
+
+_select_disks() {
+    _set_disk_selection
+    while true; do
+        # TODO: Prompt again if selection is invalid i.e. not a 'disk' (gl_src_info
+        #       and/or gl_dst_info are empty)
+        gl_src_info="$(echo "${gl_disks}" | awk -v src="${gl_src}" '$1 == src')"
+        gl_dst_info="$(echo "${gl_disks}" | awk -v dst="${gl_dst}" '$1 == dst')"
+        echo ""
+        _set_disk_confirmation
+        case "$gl_disk_confirm" in
+        [yY][eE][sS] | [yY])
+            break
+            ;;
+        [nN][oO] | [nN])
+            _set_disk_selection
+            ;;
+        *)
+            echo "$(_yellow 'Invalid input:') ${gl_disk_confirm}" >&2
+            ;;
+        esac
+    done
+}
+
+_set_partition_map() {
+    while read -r -u 3 src_info; read -r -u 4 dst_info; do
+        local _s="$(echo "${src_info}" | awk '{ print $1 }')"
+        local _d="$(echo "${dst_info}" | awk '{ print $1 }')"
+        gl_partition_map["${_s}"]="${_d}"
+    done 3<<<"${gl_src_parts_info}" 4<<<"${gl_dst_parts_info}"
+}
+
+_print_partition_map() {
+    echo ''
+    echo 'Partition map:'
+    for _key in "${!gl_partition_map[@]}"; do
+        local _s="${_key}"
+        local _d="${gl_partition_map[$_key]}"
+        echo "${_s} -> ${_d}"
+    done
+}
+
+_red() {
+    echo "${gl_red}$*${gl_normal}"
+}
+
+_green() {
+    echo "${gl_green}$*${gl_normal}"
+}
+
+_yellow() {
+    echo "${gl_yellow}$*${gl_normal}"
+}
+
+_bold() {
+    echo "${gl_bold}$*${gl_normal}"
+}
+
+_scream() {
+    printf '%s\n' "$@" >&2
+}
+
+_die() {
+    exit 1
+}
+# end functions
+
+# begin logic
+_print_missing_commands "${gl_required_commands[*]}"
+
+_green 'rsync-bk - interactively clone a disk with rsync'
+
+echo ''
+echo 'Found disks:'
+echo "${gl_disks}"
+
+echo ''
+_select_disks
+
+echo ''
+_set_partition_info "${gl_src}" "${gl_dst}"
+echo 'Found source partitions:'
+echo "$gl_src_parts_info"
+echo 'Found destination partitions:'
+echo "$gl_dst_parts_info"
+
+# TODO: extract partition info with lsblk
+#       name, type, size, free/used space
+
+# TODO: verify that partition layout is the same between src and dst
+#       if not, prompt for alternative disk selection and start over
+
+# TODO: verify that partitions are of the same type
+#       if not, prompt for alternative disk selection and start over
+
+_set_partition_map
+_print_partition_map
+
+echo ''
+echo "Creating mount point for source at ${gl_tmp_src}"
+mkdir "${gl_tmp_src}"
+ii=0
+for _key in "${!gl_partition_map[@]}"; do
+    _s="${_key}"
+    _s_tmp_dir="${gl_tmp_prefix}src_${ii}"
+    _mountpoint="${gl_tmp_src}${gl_slash}${_s_tmp_dir}"
+    echo "mounting ${_s} at ${_mountpoint}"
+    # TODO: error control
+    mkdir "${_mountpoint}"
+    # TODO: error control
+    mount ${_s} ${_mountpoint}
+    gl_src_mount_map[$_s]="${_mountpoint}"
+    ((ii++))
+done
+
+echo ''
+echo "Creating mount point for destination at ${gl_tmp_dst}"
+mkdir "$gl_tmp_dst"
+ii=0
+for _key in "${!gl_partition_map[@]}"; do
+    _d="${gl_partition_map[$_key]}"
+    _d_tmp_dir="${gl_tmp_prefix}dst_${ii}"
+    _mountpoint="${gl_tmp_dst}${gl_slash}${_d_tmp_dir}"
+    echo "mounting ${_d} at ${_mountpoint}"
+    # TODO: error control
+    mkdir "${_mountpoint}"
+    # TODO: error control
+    mount ${_d} ${_mountpoint}
+    gl_dst_mount_map[$_d]="${_mountpoint}"
+    ((ii++))
+done
+
+# TODO: use `du` to verify that there is enough space in the destination
+#       if not, issue warning and ask user to confirm continuation
+
+# TODO: prompt user for final confirmation
+#       if not, prompt for alternative partition mapping
+
+# TODO: check that lsblk output is still the same before proceeding
+#       if not, scream and die
+
+echo 'running rsync, good luck...'
+for _key in "${!gl_partition_map[@]}"; do
+    _s="${_key}"
+    _d="${gl_partition_map[$_key]}"
+    _src="${gl_src_mount_map[$_s]}"
+    _dst="${gl_dst_mount_map[$_d]}"
+    rsync ${gl_rsync_options[@]} "${_src}${gl_slash}" "${_dst}${gl_slash}"
+done
+
+echo ''
+echo 'Cleaning up...'
+for _key in "${!gl_partition_map[@]}"; do
+    _s="${_key}"
+    _d="${gl_partition_map[$_key]}"
+    _src="${gl_src_mount_map[$_s]}"
+    _dst="${gl_dst_mount_map[$_d]}"
+    umount -R ${_src}
+    umount -R ${_dst}
+    rmdir ${_src}
+    rmdir ${_dst}
+done
+
+rmdir "$gl_tmp_src"
+rmdir "$gl_tmp_dst"
+
+echo ''
+_green 'Done.'
+
+exit 0
+# end logic
