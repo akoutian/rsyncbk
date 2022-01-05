@@ -204,7 +204,7 @@ for _key in "${!gl_partition_map[@]}"; do
     # TODO: error control
     mkdir "${_mountpoint}"
     # TODO: error control
-    mount ${_s} ${_mountpoint}
+    mount "${_s}" "${_mountpoint}"
     gl_src_mount_map[$_s]="${_mountpoint}"
     ((ii++))
 done
@@ -221,7 +221,7 @@ for _key in "${!gl_partition_map[@]}"; do
     # TODO: error control
     mkdir "${_mountpoint}"
     # TODO: error control
-    mount ${_d} ${_mountpoint}
+    mount "${_d}" "${_mountpoint}"
     gl_dst_mount_map[$_d]="${_mountpoint}"
     ((ii++))
 done
@@ -241,7 +241,7 @@ for _key in "${!gl_partition_map[@]}"; do
     _d="${gl_partition_map[$_key]}"
     _src="${gl_src_mount_map[$_s]}"
     _dst="${gl_dst_mount_map[$_d]}"
-    rsync ${gl_rsync_options[@]} "${_src}${gl_slash}" "${_dst}${gl_slash}"
+    rsync "${gl_rsync_options[@]}" "${_src}${gl_slash}" "${_dst}${gl_slash}"
 done
 
 echo ''
