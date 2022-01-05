@@ -231,7 +231,7 @@ for _key in "${!gl_partition_map[@]}"; do
     _s="${_key}"
     _s_tmp_dir="${gl_tmp_prefix}src_${ii}"
     _mountpoint="${gl_tmp_src}${gl_slash}${_s_tmp_dir}"
-    echo "mounting ${_s} at ${_mountpoint}"
+    echo "Mounting ${_s} at ${_mountpoint}"
     # TODO: error control
     mkdir "${_mountpoint}"
     # TODO: error control
@@ -248,7 +248,7 @@ for _key in "${!gl_partition_map[@]}"; do
     _d="${gl_partition_map[$_key]}"
     _d_tmp_dir="${gl_tmp_prefix}dst_${ii}"
     _mountpoint="${gl_tmp_dst}${gl_slash}${_d_tmp_dir}"
-    echo "mounting ${_d} at ${_mountpoint}"
+    echo "Mounting ${_d} at ${_mountpoint}"
     # TODO: error control
     mkdir "${_mountpoint}"
     # TODO: error control
@@ -266,7 +266,7 @@ done
 # TODO: check that lsblk output is still the same before proceeding
 #       if not, scream and die
 
-echo 'running rsync, good luck...'
+echo 'Running rsync, good luck...'
 _run_rsync
 
 echo ''
