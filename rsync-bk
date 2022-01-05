@@ -104,7 +104,7 @@ _select_disks() {
         gl_dst_info="$(echo "${gl_disks}" | awk -v dst="${gl_dst}" '$1 == dst')"
         echo ""
         _set_disk_confirmation
-        case "$gl_disk_confirm" in
+        case "${gl_disk_confirm}" in
         [yY][eE][sS] | [yY])
             break
             ;;
@@ -169,14 +169,14 @@ _cleanup() {
         local _dst_part="${gl_partition_map[$_key]}"
         local _src_mountpoint="${gl_src_mount_map[$_src_part]}"
         local _dst_mountpoint="${gl_dst_mount_map[$_dst_part]}"
-        umount -R ${_src_mountpoint}
-        umount -R ${_dst_mountpoint}
-        rmdir ${_src_mountpoint}
-        rmdir ${_dst_mountpoint}
+        umount -R "${_src_mountpoint}"
+        umount -R "${_dst_mountpoint}"
+        rmdir "${_src_mountpoint}"
+        rmdir "${_dst_mountpoint}"
     done
 
-    rmdir "$gl_tmp_src"
-    rmdir "$gl_tmp_dst"
+    rmdir "${gl_tmp_src}"
+    rmdir "${gl_tmp_dst}"
 }
 
 _run_rsync() {
@@ -205,9 +205,9 @@ _select_disks
 echo ''
 _set_partition_info "${gl_src}" "${gl_dst}"
 echo 'Found source partitions:'
-echo "$gl_src_parts_info"
+echo "${gl_src_parts_info}"
 echo 'Found destination partitions:'
-echo "$gl_dst_parts_info"
+echo "${gl_dst_parts_info}"
 
 # TODO: extract partition info with lsblk
 #       name, type, size, free/used space
@@ -242,7 +242,7 @@ done
 
 echo ''
 echo "Creating mount point for destination at ${gl_tmp_dst}"
-mkdir "$gl_tmp_dst"
+mkdir "${gl_tmp_dst}"
 ii=0
 for _key in "${!gl_partition_map[@]}"; do
     _d="${gl_partition_map[$_key]}"
