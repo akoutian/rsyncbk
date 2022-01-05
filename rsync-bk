@@ -118,8 +118,10 @@ _select_disks() {
 
 _set_partition_map() {
     while read -r -u 3 src_info; read -r -u 4 dst_info; do
-        local _s="$(echo "${src_info}" | awk '{ print $1 }')"
-        local _d="$(echo "${dst_info}" | awk '{ print $1 }')"
+        local _s
+        local _d
+        _s="$(echo "${src_info}" | awk '{ print $1 }')"
+        _d="$(echo "${dst_info}" | awk '{ print $1 }')"
         gl_partition_map["${_s}"]="${_d}"
     done 3<<<"${gl_src_parts_info}" 4<<<"${gl_dst_parts_info}"
 }
