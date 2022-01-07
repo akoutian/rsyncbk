@@ -2,7 +2,6 @@
 
 # rsync-bk - interactively clone a disk with rsync
 
-# begin constants
 declare -ra gl_required_commands=(
     'awk'
     'lsblk'
@@ -56,9 +55,7 @@ gl_green="$(tput setaf 2)"
 gl_normal="$(tput sgr0)"
 gl_red="$(tput setaf 1)"
 gl_yellow="$(tput setaf 3)"
-# end constants
 
-# begin functions
 _set_disk_selection() {
     echo 'Select source and destination:'
     read -rep "$(_bold 'src >') " gl_src
@@ -197,9 +194,7 @@ _run_rsync() {
         rsync "${gl_rsync_options[@]}" "${_src_mountpoint}${gl_slash}" "${_dst_mountpoint}${gl_slash}"
     done
 }
-# end functions
 
-# begin logic
 _print_missing_commands "${gl_required_commands[*]}"
 
 _green 'rsync-bk - interactively clone a disk with rsync'
@@ -286,4 +281,3 @@ echo ''
 _green 'Done.'
 
 exit 0
-# end logic
