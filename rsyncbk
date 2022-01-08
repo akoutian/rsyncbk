@@ -270,6 +270,7 @@ done
 # TODO: check that lsblk output is still the same before proceeding
 #       if not, scream and die
 
+echo ''
 echo 'Running rsync, good luck...'
 _run_rsync
 
