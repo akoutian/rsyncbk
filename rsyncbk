@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# rsync-bk - interactively clone a disk with rsync
+# rsyncbk - interactively clone a disk with rsync
 
 declare -ra gl_required_commands=(
     'awk'
@@ -197,7 +197,7 @@ _run_rsync() {
 
 _print_missing_commands "${gl_required_commands[*]}"
 
-_green 'rsync-bk - interactively clone a disk with rsync'
+_green 'rsyncbk - interactively clone a disk with rsync'
 
 echo ''
 echo 'Found disks:'
