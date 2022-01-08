@@ -118,8 +118,7 @@ _select_disks() {
 _set_partition_map() {
     local _s
     local _d
-    while true
-    do
+    while true; do
         read -r src_info <&3 || break
         read -r dst_info <&4 || break
         _s="$(echo "${src_info}" | awk '{ print $1 }')"
@@ -216,65 +215,69 @@ _create_mountpoints() {
     done
 }
 
-_print_missing_commands "${gl_required_commands[*]}"
+_main() {
+    _print_missing_commands "${gl_required_commands[*]}"
 
-_green 'rsyncbk - interactively clone a disk with rsync'
+    _green 'rsyncbk - interactively clone a disk with rsync'
 
-echo ''
-echo 'Found disks:'
-echo "${gl_disks}"
+    echo ''
+    echo 'Found disks:'
+    echo "${gl_disks}"
 
-echo ''
-_select_disks
+    echo ''
+    _select_disks
 
-echo ''
-_set_partition_info "${gl_src}" "${gl_dst}"
-echo 'Found source partitions:'
-echo "${gl_src_parts_info}"
-echo ''
-echo 'Found destination partitions:'
-echo "${gl_dst_parts_info}"
+    echo ''
+    _set_partition_info "${gl_src}" "${gl_dst}"
+    echo 'Found source partitions:'
+    echo "${gl_src_parts_info}"
+    echo ''
+    echo 'Found destination partitions:'
+    echo "${gl_dst_parts_info}"
 
-# TODO: extract partition info with lsblk
-#       name, type, size, free/used space
+    # TODO: extract partition info with lsblk
+    #       name, type, size, free/used space
 
-# TODO: verify that partition layout is the same between src and dst
-#       if not, prompt for alternative disk selection and start over
+    # TODO: verify that partition layout is the same between src and dst
+    #       if not, prompt for alternative disk selection and start over
 
-# TODO: verify that partitions are of the same type
-#       if not, prompt for alternative disk selection and start over
+    # TODO: verify that partitions are of the same type
+    #       if not, prompt for alternative disk selection and start over
 
-_set_partition_map
-echo ''
-echo 'Partition map:'
-_print_partition_map
+    _set_partition_map
+    echo ''
+    echo 'Partition map:'
+    _print_partition_map
 
-echo ''
-echo "Creating mount point for source at ${gl_tmp_src}"
-_create_mountpoints "${gl_tmp_src}" gl_src_mount_map
+    echo ''
+    echo "Creating mount point for source at ${gl_tmp_src}"
+    _create_mountpoints "${gl_tmp_src}" gl_src_mount_map
 
-echo ''
-echo "Creating mount point for destination at ${gl_tmp_dst}"
-_create_mountpoints "${gl_tmp_dst}" gl_dst_mount_map
+    echo ''
+    echo "Creating mount point for destination at ${gl_tmp_dst}"
+    _create_mountpoints "${gl_tmp_dst}" gl_dst_mount_map
 
-# TODO: use `du` to verify that there is enough space in the destination
-#       if not, issue warning and ask user to confirm continuation
+    # TODO: use `du` to verify that there is enough space in the destination
+    #       if not, issue warning and ask user to confirm continuation
 
-# TODO: prompt user for final confirmation
-#       if not, prompt for alternative partition mapping
+    # TODO: prompt user for final confirmation
+    #       if not, prompt for alternative partition mapping
 
-# TODO: check that lsblk output is still the same before proceeding
-#       if not, scream and die
+    # TODO: check that lsblk output is still the same before proceeding
+    #       if not, scream and die
 
-echo ''
-echo 'Running rsync, good luck...'
-_run_rsync
+    echo ''
+    echo 'Running rsync, good luck...'
+    _run_rsync
 
-echo ''
-echo 'Cleaning up...'
-_cleanup
+    echo ''
+    echo 'Cleaning up...'
+    _cleanup
 
-echo ''
-_green 'Done.'
+    echo ''
+    _green 'Done.'
 
-exit 0
+    exit 0
+}
+
+_main
