@@ -74,7 +74,7 @@ _print_missing_commands() {
     local _msg
     local _required="$1"
     for _c in ${_required}; do
-        if ! hash "${_c}" >/dev/null 2>&1; then
+        if ! hash "${_c}" > /dev/null 2>&1; then
             _msg="$(_red 'Required command not found in PATH:')"
             _scream "${_msg} ${_c}"
             ((_missing_count++))
@@ -102,15 +102,15 @@ _select_disks() {
         echo ""
         _set_disk_confirmation
         case "${gl_yes_no}" in
-        [yY][eE][sS] | [yY])
-            break
-            ;;
-        [nN][oO] | [nN])
-            _set_disk_selection
-            ;;
-        *)
-            echo "$(_yellow 'Invalid input:') ${gl_yes_no}" >&2
-            ;;
+            [yY][eE][sS] | [yY])
+                break
+                ;;
+            [nN][oO] | [nN])
+                _set_disk_selection
+                ;;
+            *)
+                echo "$(_yellow 'Invalid input:') ${gl_yes_no}" >&2
+                ;;
         esac
     done
 }
@@ -124,7 +124,7 @@ _set_partition_map() {
         _s="$(echo "${src_info}" | awk '{ print $1 }')"
         _d="$(echo "${dst_info}" | awk '{ print $1 }')"
         gl_partition_map["${_s}"]="${_d}"
-    done 3<<<"${gl_src_parts_info}" 4<<<"${gl_dst_parts_info}"
+    done 3<<< "${gl_src_parts_info}" 4<<< "${gl_dst_parts_info}"
 }
 
 _print_partition_map() {
